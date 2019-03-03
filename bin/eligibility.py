@@ -1,6 +1,6 @@
-import csv
-import xlwt
 from xlwt import Workbook
+import pandas as pd
+from datetime import datetime
 
 # TODO: don't include grad students if they're included in the spreadsheet
 
@@ -16,9 +16,9 @@ def parse_names(names):
     formatted_names = []
 
     for name in names:
-        full_name = name.split(',').split(' ')
-        formatted_names.append(full_name.strip())
-
+        (last_name, first_middle) = name.split(',')
+        (first_name, middle_name) = first_middle.split(' ', 1)
+        formatted_names.append((last_name, first_name, middle_name))
     return formatted_names
 
 
@@ -85,40 +85,83 @@ def parse_class(class_list):
     return formatted_class
 
 
-def generate_xlsx(names, majors, email, classification):
+def get_grad_year(classification_list):
+    '''
+    Returns a graduation year based on what the candidates classification is
+    Args:
+    Returns:
+    '''
+    grad_years = []
+
+    YEAR = datetime.today().year
+    MONTH = datetime.today().month
+
+    for classification in classification_list:
+        # If junior in spring semester
+        if classification == 'U3' and MONTH < 6:
+            grad_years.append(YEAR + 1)
+
+        # if junior in fall semester
+        elif classification == 'U3' and MONTH >= 6:
+            grad_years.append(YEAR + 2)
+
+        # if senior in spring semester
+        elif classification == 'U4' and MONTH < 6:
+            grad_years.append(YEAR)
+
+        # if senior in fall semester
+        elif classification == 'U4' and MONTH >= 6:
+            grad_years.append(YEAR + 1)
+
+    return grad_years
+
+
+
+def generate_xlsx(candidates, **kwargs):
     '''
     Generates a new, formatted spreadsheet from the original spreadsheet
     Args:
     Returns:
     '''
     wb = Workbook()
+    NUM_CANDIDATES = len(candidates['names'])
 
-    juniors = wb.add_sheet('Juniors')
-    # seniors = wb.add_sheet('Seniors')
+    sheet = wb.add_sheet('Candidates')
 
-    juniors.a
+    sheet.write(0, 0, 'First Name')
+    sheet.write(0, 1, 'Middle Name')
+    sheet.write(0, 2, 'Last Name')
+    sheet.write(0, 3, 'Classification')
+    sheet.write(0, 4, 'Grad Month')
+    sheet.write(0, 5, 'Grad Year')
+    sheet.write(0, 6, 'Major')
+    sheet.write(0, 7, 'Email')
+
+    # i + 1 so that the titles don't get overwritten
+    for i in range(NUM_CANDIDATES):
+        sheet.write(i + 1, 0, candidates['names'][i][1])
+        sheet.write(i + 1, 1, candidates['names'][i][2])
+        sheet.write(i + 1, 2, candidates['names'][i][0])
+        sheet.write(i + 1, 3, candidates['class'][i])
+        sheet.write(i + 1, 4, 'May')
+        sheet.write(i + 1, 5, candidates['grad_year'][i])
+        sheet.write(i + 1, 6, candidates['majors'][i])
+        sheet.write(i + 1, 7, candidates['email'][i])
+
+    path = '../results/candidates.xls'
+    wb.save(path)
+    print('Candidate information saved in ', path)
 
 
-def generate_csv(names, majors, email, classification):
-    '''
-    Generates a CSV with all candidates
-    Args:
-    Returns:
-    '''
-
-
-'''
 if __name__ == '__main__':
-    # juniors = open('../tests/juniors.csv', 'r')
-    # seniors = open('../tests/seniors.csv', 'r')
-    # grads = open('../tests/graduates.csv', 'r')
+    candidates = pd.read_csv('../tests/juniors.csv')
 
-    outfile = open('../tests/students.csv', 'a')
+    cand = {
+        'names': parse_names(candidates['Name']),
+        'majors': parse_majors(candidates['Major']),
+        'email': candidates['Email'],
+        'class': parse_class(candidates['Class']),
+        'grad_year': get_grad_year(candidates['Class'])
+    }
 
-    with open('../tests/juniors.csv','r') as juniors: 
-        # print(majors)
-        # sheet = EligibilitySheet(juniors=juniors, seniors=seniors, graduates=grads, outfile=outfile)
-'''
-
-
-
+    generate_xlsx(candidates=cand)                    
