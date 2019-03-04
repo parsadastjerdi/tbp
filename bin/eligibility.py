@@ -77,7 +77,9 @@ def parse_class(class_list):
     Returns an array of classifications based on the input 
     Graduate students who intend to join need to have their information directly 
     Args:
+        class_list: list of classifications for each student
     Returns:
+        Update classifications where each student is labelled as Junior or Senior
     '''
 
     formatted_class = []
@@ -131,7 +133,10 @@ def get_grad_year(classification_list):
     '''
     Returns a graduation year based on what the candidates classification is
     Args:
+        classification_list: list of student classification (U3, U4)
     Returns:
+        List of estimated graduation year based on semester and classification. 
+        Current month is used to determine whether it is the fall or spring semester. 
     '''
 
     grad_years = []
@@ -163,7 +168,10 @@ def generate_xls(candidates, classification, **kwargs):
     '''
     Generates a new, formatted spreadsheet from the original spreadsheet (based on classification)
     Args:
+        candidates: dictionary of candidate information
+        classification: classification of the set of students (either junior or senior)
     Returns:
+        Generates an XLS in results/ for both juniors and seniors
     '''
 
     wb = Workbook()
