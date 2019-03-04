@@ -109,12 +109,14 @@ def remove_members(candidates, members):
     for email in members['Email']:
         if not pd.isnull(email):
             name, domain = email.split('@')
-            member_emails.append(name)
+            if 'qatar' not in domain:
+                member_emails.append(name)
 
     for email in candidates['Email']:
         if not pd.isnull(email):
             name, domain = email.split('@')
-            candidate_emails.append(name)
+            if 'qatar' not in domain:
+                candidate_emails.append(name)
         
     for i, email in enumerate(candidate_emails):
         if email in member_emails:
@@ -157,7 +159,6 @@ def get_grad_year(classification_list):
     return grad_years
 
 
-
 def generate_xls(candidates, classification, **kwargs):
     '''
     Generates a new, formatted spreadsheet from the original spreadsheet (based on classification)
@@ -177,7 +178,8 @@ def generate_xls(candidates, classification, **kwargs):
     sheet.write(0, 4, 'Grad Month')
     sheet.write(0, 5, 'Grad Year')
     sheet.write(0, 6, 'Major')
-    sheet.write(0, 7, 'Email')
+    sheet.write(0, 7, 'Present Member')
+    sheet.write(0, 8, 'Email')
 
     # i + 1 so that the titles don't get overwritten
     for i in range(NUM_CANDIDATES):
@@ -188,7 +190,7 @@ def generate_xls(candidates, classification, **kwargs):
         sheet.write(i + 1, 4, 'May')
         sheet.write(i + 1, 5, candidates['grad_year'][i])
         sheet.write(i + 1, 6, candidates['majors'][i])
-        sheet.write(i + 1, 7, candidates['email'][i])
+        sheet.write(i + 1, 8, candidates['email'][i])
 
     path = '../results/' + classification + '.xls'
     wb.save(path)
@@ -240,7 +242,7 @@ if __name__ == '__main__':
     }    
 
     generate_xls(candidates=seniors, classification='seniors')    
-    print('Total number of seniors:', len(seniors['email']))
-    print('Total number of juniors:', len (juniors['email']))
+    print('Eligible seniors:', len(seniors['email']), '/', len(seniors['email']) * 5)
+    print('Eligible juniors:', len (juniors['email']), '/', len(juniors['email']) * 8)
     print('Total number of candidates:', len(seniors['email']) + len(juniors['email']))
     print('Total number of current members:', len(members['Email']))            
