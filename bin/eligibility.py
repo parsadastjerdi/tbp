@@ -197,6 +197,8 @@ def generate_xls(candidates, classification, **kwargs):
 
 
 if __name__ == '__main__':
+    total_candidates = 0
+
     try:
         members = pd.read_csv('../spreadsheets/members.csv')
     except:
@@ -237,4 +239,8 @@ if __name__ == '__main__':
         'grad_year': get_grad_year(seniors['Class'])
     }    
 
-    generate_xls(candidates=seniors, classification='seniors')                
+    generate_xls(candidates=seniors, classification='seniors')    
+    print('Total number of seniors:', len(seniors['email']))
+    print('Total number of juniors:', len (juniors['email']))
+    print('Total number of candidates:', len(seniors['email']) + len(juniors['email']))
+    print('Total number of current members:', len(members['Email']))            
