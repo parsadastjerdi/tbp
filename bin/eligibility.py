@@ -175,7 +175,7 @@ def generate_xls(candidates, classification, **kwargs):
         candidates: dictionary of candidate information
         classification: classification of the set of students (either junior or senior)
     Returns:
-        Generates an XLS in results/ for both juniors and seniors
+        Generates an XLS in formatted/ for both juniors and seniors
     '''
 
     wb = Workbook()
@@ -204,7 +204,7 @@ def generate_xls(candidates, classification, **kwargs):
         sheet.write(i + 1, 6, candidates['majors'][i])
         sheet.write(i + 1, 8, candidates['email'][i])
 
-    path = '../results/' + classification + '.xls'
+    path = '../formatted/' + classification + '.xls'
     wb.save(path)
     print('Candidate information saved in ', path)
 
