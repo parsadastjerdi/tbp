@@ -102,12 +102,16 @@ def remove_members(candidates, members):
         members: Pandas Dataframe of all current members
     Returns:
         Pandas Dataframe of all candidates with current members removed
+    TODO:
+        Find current members who are no longer eligible and print out all of their names so that the 
+        user can manually delete them from the eligibility spreadsheet
     '''
 
     member_emails = []
     candidate_emails = []
 
-    # removed domain names from email due to differences between email.tamu.edu and tamu.edu
+
+    # removed domain names from email due to differences (e.g. email.tamu.edu and tamu.edu)
     for email in members['Email']:
         if not pd.isnull(email):
             name, domain = email.split('@')
