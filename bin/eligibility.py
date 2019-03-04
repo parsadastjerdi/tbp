@@ -1,8 +1,8 @@
 from xlwt import Workbook
 import pandas as pd
 from datetime import datetime
+import sys
 
-# TODO: don't include grad students if they're included in the spreadsheet
 
 def parse_names(names):
     '''
@@ -13,13 +13,15 @@ def parse_names(names):
     Returns:
         Array with three elements, each element contains a name
     '''
+
     formatted_names = []
 
     for name in names:
         (last_name, first_middle) = name.split(',')
         (first_name, middle_name) = first_middle.split(' ', 1)
-        formatted_names.append((last_name, first_name, middle_name))
+        formatted_names.append((first_name, middle_name, last_name))
     return formatted_names
+
 
 
 def parse_majors(majors):
@@ -31,6 +33,7 @@ def parse_majors(majors):
         A list of strings that contains the TBP official representation for that major.
         If the major is unavailable, then the person is assigned "Safety Engineering".
     '''
+
     formatted_majors = []
 
     for major in majors:
@@ -67,6 +70,8 @@ def parse_majors(majors):
     
     return formatted_majors
 
+
+
 def parse_class(class_list):
     '''
     Returns an array of classifications based on the input 
@@ -74,6 +79,7 @@ def parse_class(class_list):
     Args:
     Returns:
     '''
+
     formatted_class = []
 
     for classification in class_list:
@@ -85,12 +91,47 @@ def parse_class(class_list):
     return formatted_class
 
 
+
+def remove_members(candidates, members):
+    '''
+    Removes all current members from the candidate list using unique email address
+    Args:
+        candidates: Pandas Dataframe containing information on all candidates
+        members: Pandas Dataframe of all current members
+    Returns:
+        Pandas Dataframe of all candidates with current members removed
+    '''
+
+    member_emails = []
+    candidate_emails = []
+
+    # removed domain names from email due to differences between email.tamu.edu and tamu.edu
+    for email in members['Email']:
+        if not pd.isnull(email):
+            name, domain = email.split('@')
+            member_emails.append(name)
+
+    for email in candidates['Email']:
+        if not pd.isnull(email):
+            name, domain = email.split('@')
+            candidate_emails.append(name)
+        
+    for i, email in enumerate(candidate_emails):
+        if email in member_emails:
+            candidates.drop(i, inplace=True)
+
+    candidates.reset_index(inplace=True)
+    return candidates
+
+
+
 def get_grad_year(classification_list):
     '''
     Returns a graduation year based on what the candidates classification is
     Args:
     Returns:
     '''
+
     grad_years = []
 
     YEAR = datetime.today().year
@@ -117,21 +158,22 @@ def get_grad_year(classification_list):
 
 
 
-def generate_xlsx(candidates, **kwargs):
+def generate_xls(candidates, classification, **kwargs):
     '''
-    Generates a new, formatted spreadsheet from the original spreadsheet
+    Generates a new, formatted spreadsheet from the original spreadsheet (based on classification)
     Args:
     Returns:
     '''
+
     wb = Workbook()
     NUM_CANDIDATES = len(candidates['names'])
 
-    sheet = wb.add_sheet('Candidates')
+    sheet = wb.add_sheet(classification)
 
     sheet.write(0, 0, 'First Name')
     sheet.write(0, 1, 'Middle Name')
     sheet.write(0, 2, 'Last Name')
-    sheet.write(0, 3, 'Classification')
+    sheet.write(0, 3, 'Class')
     sheet.write(0, 4, 'Grad Month')
     sheet.write(0, 5, 'Grad Year')
     sheet.write(0, 6, 'Major')
@@ -139,29 +181,60 @@ def generate_xlsx(candidates, **kwargs):
 
     # i + 1 so that the titles don't get overwritten
     for i in range(NUM_CANDIDATES):
-        sheet.write(i + 1, 0, candidates['names'][i][1])
-        sheet.write(i + 1, 1, candidates['names'][i][2])
-        sheet.write(i + 1, 2, candidates['names'][i][0])
+        sheet.write(i + 1, 0, candidates['names'][i][0])
+        sheet.write(i + 1, 1, candidates['names'][i][1])
+        sheet.write(i + 1, 2, candidates['names'][i][2])
         sheet.write(i + 1, 3, candidates['class'][i])
         sheet.write(i + 1, 4, 'May')
         sheet.write(i + 1, 5, candidates['grad_year'][i])
         sheet.write(i + 1, 6, candidates['majors'][i])
         sheet.write(i + 1, 7, candidates['email'][i])
 
-    path = '../results/candidates.xls'
+    path = '../results/' + classification + '.xls'
     wb.save(path)
     print('Candidate information saved in ', path)
 
 
-if __name__ == '__main__':
-    candidates = pd.read_csv('../tests/juniors.csv')
 
-    cand = {
-        'names': parse_names(candidates['Name']),
-        'majors': parse_majors(candidates['Major']),
-        'email': candidates['Email'],
-        'class': parse_class(candidates['Class']),
-        'grad_year': get_grad_year(candidates['Class'])
+if __name__ == '__main__':
+    try:
+        members = pd.read_csv('../spreadsheets/members.csv')
+    except:
+        print('Please copy over all current members into /spreadsheets/members.csv')
+        sys.exit(1)
+    
+    try:
+        junior = pd.read_csv('../spreadsheets/juniors.csv')
+    except:
+        print('Please place all juniors into /spreadsheets/juniors.csv')
+        sys.exit(1)
+
+    juniors = remove_members(junior, members)
+
+    juniors = {
+        'names': parse_names(juniors['Name']),
+        'majors': parse_majors(juniors['Major']),
+        'email': juniors['Email'],
+        'class': parse_class(juniors['Class']),
+        'grad_year': get_grad_year(juniors['Class'])
     }
 
-    generate_xlsx(candidates=cand)                    
+    generate_xls(candidates=juniors, classification='juniors')  
+
+    try:
+        senior = pd.read_csv('../spreadsheets/seniors.csv')
+    except:
+        print('Please place all seniors into /spreadsheets/seniors.csv')
+        sys.exit(1)
+
+    seniors = remove_members(senior, members)
+
+    seniors = {
+        'names': parse_names(seniors['Name']),
+        'majors': parse_majors(seniors['Major']),
+        'email': seniors['Email'],
+        'class': parse_class(seniors['Class']),
+        'grad_year': get_grad_year(seniors['Class'])
+    }    
+
+    generate_xls(candidates=seniors, classification='seniors')                
