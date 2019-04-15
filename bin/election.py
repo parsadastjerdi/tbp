@@ -59,7 +59,7 @@ def goto_election_page(driver):
 '''
 
 
-def check_boxes(driver, classification):
+def check_boxes(driver, classification, candidates):
 	'''
 	Goes through all pages and checks all boxes
 	'''
@@ -70,8 +70,12 @@ def check_boxes(driver, classification):
 	else:
 		return
 
+	candidate_count = 0
+
 	while True:
 		for i in range(20):
+			# s = Select(driver.find_element_by_xpath)('//input[@value=' + candidates['email'][i] + ']')
+			# candidate_count += 1
 			try:
 				s = Select(driver.find_element_by_name("Rejected" + str(i + 1)))
 				s.select_by_value('A2')
@@ -90,18 +94,20 @@ def check_boxes(driver, classification):
 
 
 if __name__ == '__main__':
-	driver = webdriver.Chrome('../lib/mac/chromedriver')
-	driver.get('https://www.tbp.org/TBPelig/scripts/Login.cfm?Param=482')
+	candidates = DataFrame.read_csv('../spreadsheets/candidates.csv')
 
 	username = input('Enter Username :').strip()
 	password = input('Enter Password : ').strip()
+
+	driver = webdriver.Chrome('../lib/mac/chromedriver')
+	driver.get('https://www.tbp.org/TBPelig/scripts/Login.cfm?Param=482')
 
 	login(driver=driver, username=username, password=password)
 
 	driver.switch_to.frame(driver.find_element_by_name('RightFrame'))
 	goto_election_page(driver=driver)
-	check_boxes(driver, 'Junior')
-	check_boxes(driver, 'Senior')
+	check_boxes(driver=driver, classification='Junior', candidates=candidates)
+	check_boxes(driver=driver, classificatino='Senior', candidates=candidates)
 
 	# driver.close()
 
