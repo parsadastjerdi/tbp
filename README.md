@@ -3,7 +3,7 @@ This repository contains some short scripts for automating the reporting process
 
 ## Getting Started
 ```
-git clone https://github.com/parsadastjerdi/reports
+git clone https://github.com/parsadastjerdi/tbp
 ```
 
 ## Dependencies
